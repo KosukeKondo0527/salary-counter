@@ -2,40 +2,40 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>今月いくら稼いだ？（VND換算）</title>
   <meta name="theme-color" content="#0b0c10">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
+  
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
   <style>
     :root{--bg:#0e0f13;--fg:#f7f8fa;--muted:#9aa0a6;--accent:#ffd54f;--glass:rgba(255,255,255,.06);--glass-strong:rgba(255,255,255,.12)}
-    html,body{height:100%;margin:0;background:radial-gradient(1200px 800px at 50% 20%,#151823,#0b0c10);color:var(--fg);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic","Helvetica Neue",Arial,"Apple Color Emoji","Segoe UI Emoji")}
-    .wrap{position:relative;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
-    .counter-card{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;min-width:min(92vw,700px);padding:clamp(20px,6vw,48px);border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));box-shadow:0 10px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06);backdrop-filter:blur(8px);text-align:center}
-    .title{font-size:clamp(14px,2.5vw,16px);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-    .amount{font-variant-numeric:tabular-nums;font-weight:800;line-height:1.1;font-size:clamp(34px,10vw,80px);text-shadow:0 3px 14px rgba(0,0,0,.25)}
-    .note{font-size:clamp(12px,2.7vw,14px);color:var(--muted)}
-    .progress{width:100%;height:10px;background:var(--glass);border-radius:999px;overflow:hidden;margin-top:.8rem}
-    .bar{height:100%;width:0%;background:linear-gradient(90deg,#ffd54f,#ff9f1c);box-shadow:0 0 18px rgba(255,165,0,.45);transition:width .2s linear}
-    .chrome{position:absolute;top:16px;right:16px;display:flex;gap:10px;z-index:5}
-    .btn{appearance:none;border:0;background:var(--glass-strong);color:var(--fg);padding:.8rem 1rem;border-radius:12px;font-weight:600;backdrop-filter:blur(10px);font-size:15px}
+    html,body{height:100vh;margin:0;background:radial-gradient(1200px 800px at 50% 20%,#151823,#0b0c10);color:var(--fg);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic","Helvetica Neue",Arial,"Apple Color Emoji","Segoe UI Emoji"}
+    .wrap{position:relative;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+    .counter-card{background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));box-shadow:0 10px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06);backdrop-filter:blur(8px);border:0}
+    .title{letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .amount{font-variant-numeric:tabular-nums;font-weight:800;text-shadow:0 3px 14px rgba(0,0,0,.25)}
+    .note{color:var(--muted)}
+    .progress{background:var(--glass);border-radius:999px;overflow:hidden}
+    .bar{background:linear-gradient(90deg,#ffd54f,#ff9f1c);box-shadow:0 0 18px rgba(255,165,0,.45);transition:width .2s linear}
+    .chrome{position:absolute;top:16px;right:16px;z-index:5}
+    .btn{background:var(--glass-strong);color:var(--fg);border:0;font-weight:600;backdrop-filter:blur(10px)}
     .btn:active{transform:translateY(1px)}
-    .modal{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.45);z-index:10;padding:16px}
-    .modal[open]{display:grid}
-    .panel{width:min(92vw,520px);background:#12131a;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
-    .panel h2{margin:0 0 12px;font-size:18px}
-    .grid{display:grid;gap:12px;grid-template-columns:1fr 1fr}
-    .grid label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted)}
-    .grid input,.grid select{background:#0e0f13;color:var(--fg);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:.7rem .8rem;font-size:14px}
-    .row{display:flex;gap:10px;justify-content:flex-end;margin-top:10px}
-    .hint{color:var(--muted);font-size:12px;margin-top:6px}
+    .modal-backdrop{background-color:rgba(0,0,0,.45)}
+    .panel{background:#12131a;border:1px solid rgba(255,255,255,.08);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    .form-label{color:var(--muted)}
+    .form-control{background:#0e0f13;color:var(--fg);border:1px solid rgba(255,255,255,.12)}
+    .form-control:focus{background:#0e0f13;color:var(--fg);border-color:rgba(255,255,255,.24);box-shadow:0 0 0 .2rem rgba(255,255,255,.1)}
+    .hint{color:var(--muted)}
     .coins{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-    .coin{position:absolute;font-size:clamp(16px,5vw,28px);will-change:transform,opacity;filter:drop-shadow(0 6px 6px rgba(0,0,0,.25));animation:floatUp 1.6s ease-out forwards,spin 1.6s linear forwards;opacity:0}
+    .coin{position:absolute;width:clamp(16px,5vw,28px);will-change:transform,opacity;filter:drop-shadow(0 6px 6px rgba(0,0,0,.25));animation:floatUp 1.6s ease-out forwards,spin 1.6s linear forwards;opacity:0}
     @keyframes floatUp{0%{transform:translate(var(--x,0),var(--y,0)) scale(.8);opacity:0}8%{opacity:1}70%{opacity:1}100%{transform:translate(calc(var(--x,0) * 1.1),calc(var(--y,0) - 160px)) scale(1);opacity:0}}
     @keyframes spin{from{transform:rotate(0turn)}to{transform:rotate(1turn)}}
     @media (prefers-reduced-motion:reduce){.coin{animation-duration:1.0s}}
-    @media (max-width:480px){.panel{width:100%;height:100%;border-radius:0;padding:22px}}
     *{-webkit-tap-highlight-color:transparent}
     .provider{position:absolute;left:16px;bottom:12px;color:var(--muted);font-size:11px;opacity:.8}
   </style>
@@ -43,15 +43,19 @@
 <body>
   <div class="wrap">
     <div class="chrome">
-      <button class="btn" id="btn-settings" aria-label="設定を開く">⚙️ 設定</button>
-      <button class="btn" id="btn-boost" aria-label="コインを増やす">🪙 じゃばじゃば</button>
+      <button class="btn btn-sm me-2" id="btn-settings" aria-label="設定を開く">⚙️ 設定</button>
+      <button class="btn btn-sm" id="btn-boost" aria-label="コインを増やす">🪙 じゃばじゃば</button>
     </div>
 
-    <div class="counter-card" aria-live="polite">
-      <div class="title">今月の獲得額（給料日サイクル基準｜表示: VND）</div>
-      <div class="amount" id="amount">₫0</div>
-      <div class="note" id="subnote">設定から月収・給料日・基準通貨を登録してください</div>
-      <div class="progress"><div class="bar" id="bar"></div></div>
+    <div class="card counter-card p-4 p-md-5" aria-live="polite" style="min-width: min(92vw, 700px);">
+      <div class="card-body text-center">
+        <h5 class="card-title title mb-3">今月の獲得額（給料日サイクル基準｜表示: VND）</h5>
+        <div class="amount display-1 mb-3" id="amount">₫0</div>
+        <p class="note mb-4" id="subnote">設定から月収・給料日・基準通貨を登録してください</p>
+        <div class="progress mb-0" style="height: 10px;">
+          <div class="bar progress-bar" id="bar" role="progressbar" style="width: 0%;"></div>
+        </div>
+      </div>
     </div>
 
     <div class="coins" id="coins"></div>
@@ -59,45 +63,62 @@
   </div>
 
   <!-- 設定モーダル -->
-  <dialog class="modal" id="modal">
-    <div class="panel">
-      <h2>設定</h2>
-      <div class="grid">
-        <label>月収
-          <input id="salary" type="number" inputmode="decimal" min="0" step="1000" placeholder="例: 400000">
-        </label>
-        <label>基準通貨（入力の通貨）
-          <select id="currency">
-            <option value="JPY" selected>JPY（円）</option>
-            <option value="USD">USD（$）</option>
-            <option value="EUR">EUR（€）</option>
-            <option value="VND">VND（₫）</option>
-          </select>
-        </label>
-        <label>給料日（毎月の○日）
-          <input id="payday" type="number" inputmode="numeric" min="1" max="31" placeholder="例: 25">
-        </label>
-        <label>小数表示
-          <select id="decimals">
-            <option value="0" selected>しない</option>
-            <option value="2">2桁</option>
-          </select>
-        </label>
-        <label>表示通貨（固定）
-          <input value="VND" disabled>
-        </label>
-        <label>現在のレート
-          <input id="rateView" disabled placeholder="自動取得中…">
-        </label>
-      </div>
-      <div class="hint">※ レートはexchangerate.hostから自動取得（参考値）。取得失敗時のみ最後の保存値を使用。</div>
-      <div class="row">
-        <button class="btn" id="btn-cancel">キャンセル</button>
-        <button class="btn" id="btn-save">保存</button>
+  <div class="modal fade" id="modal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content panel">
+        <div class="modal-header border-0">
+          <h5 class="modal-title">設定</h5>
+        </div>
+        <div class="modal-body">
+          <form>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="salary" class="form-label">月収</label>
+                <input type="number" class="form-control" id="salary" inputmode="decimal" min="0" step="1000" placeholder="例: 400000">
+              </div>
+              <div class="col-md-6">
+                <label for="currency" class="form-label">基準通貨（入力の通貨）</label>
+                <select class="form-select" id="currency">
+                  <option value="JPY" selected>JPY（円）</option>
+                  <option value="USD">USD（$）</option>
+                  <option value="EUR">EUR（€）</option>
+                  <option value="VND">VND（₫）</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="payday" class="form-label">給料日（毎月の○日）</label>
+                <input type="number" class="form-control" id="payday" inputmode="numeric" min="1" max="31" placeholder="例: 25">
+              </div>
+              <div class="col-md-6">
+                <label for="decimals" class="form-label">小数表示</label>
+                <select class="form-select" id="decimals">
+                  <option value="0" selected>しない</option>
+                  <option value="2">2桁</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="displayCurrency" class="form-label">表示通貨（固定）</label>
+                <input type="text" class="form-control" id="displayCurrency" value="VND" disabled>
+              </div>
+              <div class="col-md-6">
+                <label for="rateView" class="form-label">現在のレート</label>
+                <input type="text" class="form-control" id="rateView" disabled placeholder="自動取得中…">
+              </div>
+            </div>
+            <div class="hint mt-3">※ レートはexchangerate.hostから自動取得（参考値）。取得失敗時のみ最後の保存値を使用。</div>
+          </form>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-secondary" id="btn-cancel">キャンセル</button>
+          <button type="button" class="btn btn-primary" id="btn-save">保存</button>
+        </div>
       </div>
     </div>
-  </dialog>
+  </div>
 
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
   <script>
     const LS_KEY = "earning-counter:v2"; // v2: VND自動レート対応
     const RATE_CACHE_KEY = "earning-rate-cache:vnd";
@@ -207,7 +228,7 @@
     if((conn&&conn.saveData)||window.matchMedia('(prefers-reduced-motion: reduce)').matches){ COIN_INTERVAL_MS=300; }
     if('deviceMemory'in navigator && navigator.deviceMemory<=2){ COIN_INTERVAL_MS=Math.max(COIN_INTERVAL_MS,360); }
     function spawnCoin(burst=false){
-      const c=document.createElement("div"); c.className="coin"; c.textContent="🪙";
+      const c=document.createElement("img"); c.className="coin"; c.src="coin.svg";
       const vw=innerWidth,vh=innerHeight,cx=vw/2,cy=vh/2;
       const jitter=(n)=> (Math.random()*2-1)*n;
       c.style.left=(cx+jitter(burst?140:70))+"px";
