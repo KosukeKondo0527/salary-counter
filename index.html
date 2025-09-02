@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>今月いくら稼いだ？</title>
+  <style>
+    :root {
+      --bg: #0e0f13;
+      --fg: #f7f8fa;
+      --muted: #9aa0a6;
+      --accent: #ffd54f;
+      --glass: rgba(255,255,255,0.06);
+      --glass-strong: rgba(255,255,255,0.12);
+    }
+    html,body{
+      height:100%;
+      margin:0;
+      background: radial-gradient(1200px 800px at 50% 20%, #151823, #0b0c10);
+      color: var(--fg);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    .wrap{
+      position:relative;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+    }
+    .counter-card{
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:.5rem;
+      min-width: min(92vw, 700px);
+      padding: clamp(20px, 6vw, 48px);
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+      box-shadow: 0 10px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06);
+      backdrop-filter: blur(8px);
+      text-align:center;
+    }
+    .title{
+      font-size: clamp(14px, 2.5vw, 16px);
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color: var(--muted);
+    }
+    .amount{
+      font-variant-numeric: tabular-nums;
+      font-weight:800;
+      line-height:1.1;
+      font-size: clamp(34px, 10vw, 80px);
+      text-shadow: 0 3px 14px rgba(0,0,0,.25);
+    }
+    .note{
+      font-size: clamp(12px, 2.7vw, 14px);
+      color: var(--muted);
+    }
+    .progress{
+      width:100%;
+      height:10px;
+      background: var(--glass);
+      border-radius:999px;
+      overflow:hidden;
+      margin-top:.8rem;
+    }
+    .bar{
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, #ffd54f, #ff9f1c);
+      box-shadow: 0 0 18px rgba(255,165,0,.45);
+      transition: width .2s linear;
+    }
+    .chrome{
+      position:absolute;
+      top:16px; right:16px;
+      display:flex; gap:10px;
+      z-index:5;
+    }
+    .btn{
+      appearance:none; border:0;
+      background: var(--glass-strong);
+      color:var(--fg);
+      padding:.6rem .8rem;
+      border-radius:12px;
+      font-weight:600;
+      backdrop-filter: blur(10px);
+    }
+    .btn:active{ transform: translateY(1px); }
+
+    /* 設定ダイアログ */
+    .modal{
+      position:fixed; inset:0;
+      display:none; place-items:center;
+      background: rgba(0,0,0,.45);
+      z-index:10;
+      padding:16px;
+    }
+    .modal[open]{ display:grid; }
+    .panel{
+      width:min(92vw,520px);
+      background:#12131a;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:16px; padding:18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    .panel h2{ margin:0 0 12px; font-size:18px; }
+    .grid{
+      display:grid; gap:12px; grid-template-columns:1fr 1fr;
+    }
+    .grid label{
+      display:flex; flex-direction:column; gap:6px; font-size:12px; color:var(--muted);
+    }
+    .grid input, .grid select{
+      background:#0e0f13; color:var(--fg);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:10px; padding:.7rem .8rem; font-size:14px;
+    }
+    .row{ display:flex; gap:10px; justify-content:flex-end; margin-top:10px; }
+    .hint{ color:var(--muted); font-size:12px; margin-top:6px; }
+
+    /* コインじゃばじゃば */
+    .coins{
+      position:absolute; inset:0; pointer-events:none; overflow:hidden;
+    }
+    .coin{
+      position:absolute;
+      font-size: clamp(16px, 5vw, 28px);
+      will-change: transform, opacity;
+      filter: drop-shadow(0 6px 6px rgba(0,0,0,.25));
+      animation: floatUp 1.6s ease-out forwards, spin 1.6s linear forwards;
+      opacity:0;
+    }
+    @keyframes floatUp{
+      0%{ transform: translate(var(--x,0), var(--y,0)) scale(.8); opacity:0; }
+      8%{ opacity:1; }
+      70%{ opacity:1; }
+      100%{ transform: translate(calc(var(--x,0) * 1.1), calc(var(--y,0) - 160px)) scale(1); opacity:0; }
+    }
+    @keyframes spin{
+      from{ transform: rotate(0turn); }
+      to{ transform: rotate(1turn); }
+    }
+
+    /* iOSでのタップハイライト抑制 */
+    *{ -webkit-tap-highlight-color: transparent; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="chrome">
+      <button class="btn" id="btn-settings" aria-label="設定を開く">⚙️ 設定</button>
+      <button class="btn" id="btn-boost" aria-label="コインを増やす">🪙 じゃばじゃば</button>
+    </div>
+
+    <div class="counter-card" aria-live="polite">
+      <div class="title">今月の獲得額（給料日サイクル基準）</div>
+      <div class="amount" id="amount">¥0</div>
+      <div class="note" id="subnote">設定から月収と給料日を登録してください</div>
+      <div class="progress"><div class="bar" id="bar"></div></div>
+    </div>
+
+    <div class="coins" id="coins"></div>
+  </div>
+
+  <!-- 設定モーダル -->
+  <dialog class="modal" id="modal">
+    <div class="panel">
+      <h2>設定</h2>
+      <div class="grid">
+        <label>
+          月収（総支給・税込/手取りどちらでも）
+          <input id="salary" type="number" inputmode="decimal" min="0" step="1000" placeholder="例: 400000">
+        </label>
+        <label>
+          通貨
+          <select id="currency">
+            <option value="JPY" selected>JPY（円）</option>
+            <option value="USD">USD（$）</option>
+            <option value="EUR">EUR（€）</option>
+          </select>
+        </label>
+        <label>
+          給料日（毎月の○日）
+          <input id="payday" type="number" inputmode="numeric" min="1" max="31" placeholder="例: 25">
+        </label>
+        <label>
+          小数表示
+          <select id="decimals">
+            <option value="0" selected>しない（円向け）</option>
+            <option value="2">2桁</option>
+          </select>
+        </label>
+      </div>
+      <div class="hint">※ 給料日は「○日払い」の○日。28日未満の月は自動で月末に調整します。</div>
+      <div class="row">
+        <button class="btn" id="btn-cancel">キャンセル</button>
+        <button class="btn" id="btn-save">保存</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    // --- 設定の永続化 ---
+    const LS_KEY = "earning-counter:v1";
+    const $ = (sel) => document.querySelector(sel);
+
+    const state = {
+      salary: 0,       // 月収
+      payday: 25,      // 毎月の支給日（1-31）
+      currency: "JPY", // 通貨
+      decimals: 0      // 表示小数
+    };
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(LS_KEY);
+        if (raw) Object.assign(state, JSON.parse(raw));
+      } catch(e){}
+    }
+    function save() {
+      localStorage.setItem(LS_KEY, JSON.stringify(state));
+    }
+
+    // --- 日付ユーティリティ ---
+    function lastDayOfMonth(y, m /* 0-based */){
+      return new Date(y, m+1, 0).getDate();
+    }
+    function paydayDate(year, month0, payday){
+      const ld = lastDayOfMonth(year, month0);
+      const d = Math.min(payday, ld);
+      return new Date(year, month0, d, 0, 0, 0, 0); // ローカル0時
+    }
+    function currentCycle(payday){
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = now.getMonth();
+
+      const thisPay = paydayDate(y, m, payday);
+      let start, end;
+
+      if (now >= thisPay) {
+        start = thisPay;
+        // 次月
+        const ny = m === 11 ? y+1 : y;
+        const nm = (m+1) % 12;
+        end = paydayDate(ny, nm, payday);
+      } else {
+        // 前月開始
+        const py = m === 0 ? y-1 : y;
+        const pm = (m+11) % 12;
+        start = paydayDate(py, pm, payday);
+        end = thisPay;
+      }
+      return { start, end, now };
+    }
+
+    // --- フォーマッタ ---
+    function formatMoney(n, currency, decimals){
+      try {
+        return new Intl.NumberFormat(navigator.language || "ja-JP", {
+          style: "currency",
+          currency,
+          minimumFractionDigits: decimals,
+          maximumFractionDigits: decimals
+        }).format(n);
+      } catch(_) {
+        // もし未知通貨の場合は記号なしのフォールバック
+        return (currency + " " + n.toFixed(decimals));
+      }
+    }
+
+    // --- 描画＆アニメーション ---
+    const amountEl = $("#amount");
+    const noteEl = $("#subnote");
+    const barEl = $("#bar");
+    const coinsEl = $("#coins");
+
+    let lastFrame = performance.now();
+    let currentDisplay = 0; // 表示上の数値（補間用）
+
+    function calcInstantEarning() {
+      if (state.salary <= 0) return {earned:0, progress:0, start:null, end:null, now:new Date()};
+      const { start, end, now } = currentCycle(state.payday);
+      const totalMs = end - start;
+      const elapsed = Math.max(0, Math.min(now - start, totalMs));
+      const progress = elapsed / totalMs;
+      const earned = state.salary * progress;
+      return { earned, progress, start, end, now };
+    }
+
+    function tick(nowTs){
+      const dt = nowTs - lastFrame;
+      lastFrame = nowTs;
+
+      const { earned, progress, start, end, now } = calcInstantEarning();
+
+      // 表示はスムーズに追従（イージング）
+      const target = earned;
+      const speed = Math.max(0.08, 0.001 * dt); // フレーム間の滑らかさ
+      currentDisplay += (target - currentDisplay) * speed;
+
+      amountEl.textContent = formatMoney(currentDisplay, state.currency, Number(state.decimals));
+      barEl.style.width = (progress * 100).toFixed(2) + "%";
+
+      if (start && end) {
+        const remainMs = end - now;
+        const days = Math.floor(remainMs / 86400000);
+        const hours = Math.floor((remainMs % 86400000)/3600000);
+        noteEl.textContent = `サイクル進捗 ${(progress*100).toFixed(2)}%｜次の給料日まで 残り ${days}日${hours}時間`;
+      } else {
+        noteEl.textContent = `設定から月収と給料日を登録してください`;
+      }
+
+      requestAnimationFrame(tick);
+    }
+
+    // --- コイン演出 ---
+    let coinTimer = null;
+    function spawnCoin(burst=false){
+      const c = document.createElement("div");
+      c.className = "coin";
+      // 🪙 or fallback（古いOS用に円記号）
+      c.textContent = "🪙";
+      const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+      const vh = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+      const cx = vw/2, cy = vh/2;
+
+      // 周辺から少しランダムに飛ぶ
+      const jitter = () => (Math.random()*2 - 1) * (burst ? 140 : 70);
+      const x = cx + jitter();
+      const y = cy + jitter();
+
+      c.style.left = (x) + "px";
+      c.style.top  = (y) + "px";
+      c.style.setProperty("--x", (Math.random()*60 - 30) + "px");
+      c.style.setProperty("--y", (Math.random()*10 + 10) + "px");
+
+      // サイズ微調整
+      c.style.transform = `translate(-50%, -50%) scale(${0.8 + Math.random()*0.5})`;
+
+      coinsEl.appendChild(c);
+      c.addEventListener("animationend", ()=> c.remove());
+    }
+    function startCoins(){
+      stopCoins();
+      coinTimer = setInterval(()=> spawnCoin(false), 160);
+    }
+    function stopCoins(){
+      if (coinTimer) { clearInterval(coinTimer); coinTimer=null; }
+    }
+
+    // --- UI配線 ---
+    const modal = $("#modal");
+    const salaryI = $("#salary");
+    const paydayI = $("#payday");
+    const currencyI = $("#currency");
+    const decimalsI = $("#decimals");
+
+    function openModal(){
+      salaryI.value = state.salary || "";
+      paydayI.value = state.payday || 25;
+      currencyI.value = state.currency || "JPY";
+      decimalsI.value = String(state.decimals ?? 0);
+      modal.setAttribute("open", "");
+    }
+    function closeModal(){
+      modal.removeAttribute("open");
+    }
+
+    $("#btn-settings").addEventListener("click", openModal);
+    $("#btn-cancel").addEventListener("click", closeModal);
+    $("#btn-save").addEventListener("click", ()=>{
+      const s = Number(salaryI.value);
+      const p = Math.max(1, Math.min(31, parseInt(paydayI.value, 10)));
+      const dec = parseInt(decimalsI.value, 10) || 0;
+      if (!isFinite(s) || s <= 0) { alert("月収を正しく入力してください"); return; }
+      state.salary = s;
+      state.payday = p;
+      state.currency = currencyI.value || "JPY";
+      state.decimals = dec;
+      save();
+      closeModal();
+
+      // ささやかなバースト
+      for (let i=0;i<18;i++) setTimeout(()=>spawnCoin(true), i*20);
+    });
+
+    $("#btn-boost").addEventListener("click", ()=>{
+      for (let i=0;i<14;i++) setTimeout(()=>spawnCoin(true), i*18);
+    });
+
+    // 初期化
+    load();
+    if (!state.salary) openModal();
+    startCoins();
+    requestAnimationFrame((t)=>{ lastFrame=t; tick(t); });
+
+    // 画面遷移時に省電力
+    document.addEventListener("visibilitychange", ()=>{
+      if (document.hidden) stopCoins(); else startCoins();
+    }, {passive:true});
+  </script>
+</body>
+</html>
