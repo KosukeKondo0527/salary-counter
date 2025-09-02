@@ -16,7 +16,7 @@
     :root{--bg:#0e0f13;--fg:#f7f8fa;--muted:#9aa0a6;--accent:#ffd54f;--glass:rgba(255,255,255,.06);--glass-strong:rgba(255,255,255,.12)}
     html,body{height:100vh;margin:0;background:radial-gradient(1200px 800px at 50% 20%,#151823,#0b0c10);color:var(--fg);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic","Helvetica Neue",Arial,"Apple Color Emoji","Segoe UI Emoji"}
     .wrap{position:relative;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
-    .counter-card{box-shadow:0 10px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06);backdrop-filter:blur(8px);border:0}
+    .counter-card{background: transparent; box-shadow:0 10px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06);backdrop-filter:blur(8px);border:0}
     .title{letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
     .amount{font-variant-numeric:tabular-nums;font-weight:800;text-shadow:0 3px 14px rgba(0,0,0,.25);color:white}
     .note{color:var(--muted)}
@@ -31,29 +31,116 @@
     .form-control{background:#0e0f13;color:var(--fg);border:1px solid rgba(255,255,255,.12)}
     .form-control:focus{background:#0e0f13;color:var(--fg);border-color:rgba(255,255,255,.24);box-shadow:0 0 0 .2rem rgba(255,255,255,.1)}
     .hint{color:var(--muted)}
-    .coins{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:-1}
-    .coin{position:absolute;width:clamp(16px,5vw,28px);will-change:transform,opacity;filter:drop-shadow(0 6px 6px rgba(0,0,0,.25));animation:floatUp 1.6s ease-out forwards,spin 1.6s linear forwards;opacity:0}
-    @keyframes floatUp{0%{transform:translate(var(--x,0),var(--y,0)) scale(.8);opacity:0}8%{opacity:1}70%{opacity:1}100%{transform:translate(calc(var(--x,0) * 1.1),calc(var(--y,0) - 160px)) scale(1);opacity:0}}
-    @keyframes spin{from{transform:rotate(0turn)}to{transform:rotate(1turn)}}
-    @media (prefers-reduced-motion:reduce){.coin{animation-duration:1.0s}}
-    *{-webkit-tap-highlight-color:transparent}
     .provider{position:absolute;left:16px;bottom:12px;color:var(--muted);font-size:11px;opacity:.8}
+
+    /* 変更: カードUIを完全に透過し、コインを背後に配置する */
+    .card.counter-card,
+    .card.counter-card *,
+    .card.counter-card > .card-body,
+    .card.counter-card .card-body {
+      background: transparent !important;
+      background-color: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+    }
+
+    .counter-card{ position: relative !important; z-index: 2 !important; }
+    .coins{ position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:0 }
+    .coin{
+      position:absolute;
+      width:clamp(16px,5vw,28px);
+      will-change:transform,opacity;
+      filter:drop-shadow(0 6px 6px rgba(0,0,0,.25));
+      /* デフォルト duration を長めにして上昇をゆっくりにする */
+      animation:floatUp var(--duration,4.0s) cubic-bezier(.2,.9,.3,1) forwards;
+      opacity:0;
+      /* デフォルト変数 */
+      --x: 0px; --s: 1; --rise: 200px;
+    }
+
+    @keyframes floatUp {
+      0% {
+        transform: translate(var(--x, 0), 0) translate(-50%, -50%) scale(var(--s, 0.8)) rotate(0turn);
+        opacity: 0;
+      }
+      8% { opacity: 1; }
+      70% { opacity: 1; }
+      100% {
+        /* 水平移動を増幅して“外側へ飛んでいく”ようにする */
+        transform: translate(calc(var(--x, 0) * 2.5), calc(-1 * var(--rise, 200px))) translate(-50%, -50%) scale(1) rotate(1turn);
+        opacity: 0;
+      }
+    }
+
+    /* モーダルは常に最前面 */
+    .modal { z-index: 2000; }
+
+    /* 強制上書き: .wrap 配下のカード/UI の背景・影・疑似要素を完全に消す */
+    .wrap .card.counter-card,
+    .wrap .card.counter-card .card-body,
+    .wrap .card.counter-card *,
+    .wrap .card.counter-card::before,
+    .wrap .card.counter-card::after {
+      background: transparent !important;
+      background-color: transparent !important;
+      box-shadow: none !important;
+      border: 0 !important;
+      color: inherit !important;
+    }
+
+    /* 追加: amount 等の個別要素が背景を持つ場合にも無効化 */
+    .wrap .card.counter-card .display-1,
+    .wrap .card.counter-card .card-title,
+    .wrap .card.counter-card .progress {
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+
+    /* coins と UI の重なり順を明示 */
+    .wrap { position: relative; z-index: 0; }
+    .coins { position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index: 0 !important; }
+    .card.counter-card { position: relative; z-index: 1 !important; }
+    
+    /* カードコンテナ：国旗とカードをまとめる親要素 */
+    .card-container {
+      position: relative;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    /* ベトナム国旗の装飾 */
+    .flag-decoration {
+      position: absolute;
+      /* カードの上に配置（ピクセル指定で固定） */
+      top: -100px;
+      width: 200px;
+      height: auto;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,.3));
+      z-index: 3;
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
+  <div class="wrap">    
     <div class="chrome">
       <button class="btn btn-sm me-2" id="btn-settings" aria-label="設定を開く">⚙️ 設定</button>
       <button class="btn btn-sm" id="btn-boost" aria-label="コインを増やす">🪙 じゃばじゃば</button>
     </div>
 
-    <div class="card counter-card p-4 p-md-5" aria-live="polite" style="min-width: min(92vw, 700px);">
-      <div class="card-body text-center">
-        <h5 class="card-title title mb-3">今月これだけ稼いだドン！</h5>
-        <div class="amount display-1 mb-3" id="amount">₫0</div>
-        <p class="note mb-4" id="subnote">設定から月収・給料日・基準通貨を登録してください</p>
-        <div class="progress mb-0" style="height: 10px;">
-          <div class="bar progress-bar" id="bar" role="progressbar" style="width: 0%;"></div>
+    <!-- カードとその上の国旗を同じdivで包んで相対位置関係を固定 -->
+    <div class="card-container">
+      <!-- 国旗をカード内に配置 -->
+      <img src="flag.svg" alt="Vietnam Flag" class="flag-decoration">
+      
+      <div class="card counter-card p-4 p-md-5" aria-live="polite" style="min-width: min(92vw, 700px);">
+        <div class="card-body text-center">
+          <h5 class="card-title title mb-3">今月これだけ稼いだドン！</h5>
+          <div class="amount display-1 mb-3" id="amount">₫0</div>
+          <p class="note mb-4" id="subnote">設定から月収・給料日・基準通貨を登録してください</p>
+          <div class="progress mb-0" style="height: 10px;">
+            <div class="bar progress-bar" id="bar" role="progressbar" style="width: 0%;"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -223,24 +310,74 @@
     }
 
     // --- コイン演出 ---
-    let coinTimer=null, COIN_INTERVAL_MS=160;
+    // コイン演出（1コイン = 1 VND）。稼ぎ（VND/ms）を積算して整数コインを生成。
     const conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
-    if((conn&&conn.saveData)||window.matchMedia('(prefers-reduced-motion: reduce)').matches){ COIN_INTERVAL_MS=300; }
-    if('deviceMemory'in navigator && navigator.deviceMemory<=2){ COIN_INTERVAL_MS=Math.max(COIN_INTERVAL_MS,360); }
+    // 低運動設定や省データ設定では生成を抑える
+    const REDUCED_MOTION = (conn&&conn.saveData) || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let coinAccumulator = 0; // 小数コインを蓄積
+    let lastCoinTs = null;
+    let coinLoopActive = false;
+
     function spawnCoin(burst=false){
-      const c=document.createElement("img"); c.className="coin"; c.src="coin.svg";
-      const vw=innerWidth,vh=innerHeight,cx=vw/2,cy=vh/2;
-      const jitter=(n)=> (Math.random()*2-1)*n;
-      c.style.left=(cx+jitter(burst?140:70))+"px";
-      c.style.top=(cy+jitter(burst?140:70))+"px";
-      c.style.setProperty("--x",(Math.random()*60-30)+"px");
-      c.style.setProperty("--y",(Math.random()*20+10)+"px");
-      c.style.transform=`translate(-50%,-50%) scale(${0.8+Math.random()*0.5})`;
-      coinsEl.appendChild(c);
-      c.addEventListener("animationend",()=>c.remove());
+       const c = document.createElement("img");
+       c.className = "coin";
+       c.src = "coin.svg";
+       const vw = innerWidth, vh = innerHeight;
+       const cx = Math.round(vw/2);
+       const jitter = (n) => (Math.random()*2-1)*n;
+       // 開始位置は画面下端の中央付近から（中央から外側へ広がる）
+       // 中央に近いほど外側への広がりが視認しやすくなるので jitter は小さめにする
+       const startLeft = cx + Math.round(jitter(12));
+       const startTop = Math.round(vh - 12 + jitter(6)); // ほぼ下端
+       c.style.left = startLeft + "px";
+       c.style.top = startTop + "px";
+       // 横方向の移動: 中心からの位置差に応じて外側方向へ偏らせる
+       const baseSpread = burst ? 100 : 220; // 適度に広がる値
+       // 外側方向に強めの移動をさせるため、開始位置が右側なら正、左側なら負の値を使う
+       const dir = (startLeft >= cx) ? 1 : -1;
+       const magnitude = (Math.random() * baseSpread) + (baseSpread * 0.25); // 最低でも baseSpread*0.25 以上
+       c.style.setProperty('--x', (dir * magnitude) + 'px');
+       // 少し小さめのコインで多く表示しても邪魔にならないようにする
+       c.style.setProperty('--s', (0.45 + Math.random()*0.7).toString());
+       // 画面上端まで上がるように画面高さ + マージン
+       c.style.setProperty('--rise', (vh + 160) + 'px');
+       // アニメーション時間をさらに長めにして上昇をゆっくりにする（3.5〜6.0s）
+       c.style.setProperty('--duration', (3.5 + Math.random()*2.5) + 's');
+       coinsEl.appendChild(c);
+       c.addEventListener('animationend', () => c.remove());
+     }
+    // 現在の稼ぎ（VND/ms）を返す
+    function earnPerMsVND(){
+      if(state.salary <= 0) return 0;
+      const {start,end} = currentCycle(state.payday);
+      const total = end - start;
+      if(!total) return 0;
+      const perMsBase = state.salary / total; // 基準通貨 / ms
+      const rate = (state.currency === 'VND') ? 1 : (state.rateVND || 0);
+      return perMsBase * rate; // VND / ms
     }
-    function startCoins(){ stopCoins(); coinTimer=setInterval(()=>spawnCoin(false),COIN_INTERVAL_MS); }
-    function stopCoins(){ if(coinTimer) clearInterval(coinTimer); coinTimer=null; }
+
+    function coinLoop(ts){
+      if(!coinLoopActive) return;
+      if(lastCoinTs == null) lastCoinTs = ts;
+      const dt = Math.min(200, ts - lastCoinTs); // 異常な大きさを防ぐ
+      lastCoinTs = ts;
+      // 低運動設定では生成を抑える
+      if(REDUCED_MOTION){ requestAnimationFrame(coinLoop); return; }
+
+      const perMs = earnPerMsVND();
+      coinAccumulator += perMs * dt;
+      // 安全上の上限
+      if(coinAccumulator > 5000) coinAccumulator = 5000;
+      while(coinAccumulator >= 1){
+        spawnCoin(false);
+        coinAccumulator -= 1;
+      }
+      requestAnimationFrame(coinLoop);
+    }
+
+    function startCoinLoop(){ if(!coinLoopActive){ coinLoopActive = true; lastCoinTs = null; requestAnimationFrame(coinLoop); } }
+    function stopCoinLoop(){ coinLoopActive = false; lastCoinTs = null; coinAccumulator = 0; }
 
     // --- UI配線 ---
     const modalEl = $("#modal");
@@ -256,15 +393,16 @@
       // 保存直前に最新レートも反映
       await updateRateView();
       save(); modal.hide();
-      for(let i=0;i<18;i++) setTimeout(()=>spawnCoin(true),i*20);
+      // バースト: 中央から外側へ広がる多めのコイン
+      for(let i=0;i<28;i++) setTimeout(()=>spawnCoin(true), i*30);
     };
-    $("#btn-boost").onclick=()=>{for(let i=0;i<14;i++) setTimeout(()=>spawnCoin(true),i*18);};
+    $("#btn-boost").onclick=()=>{ for(let i=0;i<26;i++) setTimeout(()=>spawnCoin(true), i*28); };
 
     // 初期化
     load();
-    startCoins();
+    startCoinLoop();
     requestAnimationFrame(()=>tick());
-    document.addEventListener("visibilitychange",()=>{document.hidden?stopCoins():startCoins();});
+    document.addEventListener("visibilitychange",()=>{document.hidden?stopCoinLoop():startCoinLoop();});
 
     // 初回レート取得（基準通貨がVND以外なら）
     (async ()=>{ if(state.currency!=="VND"){ await updateRateView(); save(); }})();
