@@ -59,7 +59,7 @@
     </div>
 
     <div class="coins" id="coins"></div>
-    <div class="provider">FX data: exchangerate.host（参考レート）</div>
+    <div class="provider">FX data: exchangerate-api.com（参考レート）</div>
   </div>
 
   <!-- 設定モーダル -->
@@ -105,7 +105,7 @@
                 <input type="text" class="form-control" id="rateView" disabled placeholder="自動取得中…">
               </div>
             </div>
-            <div class="hint mt-3">※ レートはexchangerate.hostから自動取得（参考値）。取得失敗時のみ最後の保存値を使用。</div>
+            <div class="hint mt-3">※ レートはexchangerate-api.comから自動取得（参考値）。取得失敗時のみ最後の保存値を使用。</div>
           </form>
         </div>
         <div class="modal-footer border-0">
@@ -166,17 +166,17 @@
 
     // --- 為替の自動取得（1 base = ? VND） ---
     async function fetchRateVND(base){
-      // キャッシュ（6時間）優先
+      // キャッシュ（24時間）優先
       loadRateCache(base);
-      const FRESH_MS = 6*60*60*1000;
+      const FRESH_MS = 24*60*60*1000;
       if(state.rateVND>0 && (Date.now()-state.rateUpdatedAt)<FRESH_MS){ return state.rateVND; }
 
       try{
-        const url = `https://api.exchangerate.host/latest?base=${encodeURIComponent(base)}&symbols=VND`;
+        const url = `https://v6.exchangerate-api.com/v6/e51d4872933b3d1b16847887/pair/${encodeURIComponent(base)}/VND`;
         const res = await fetch(url, { cache: "no-store" });
         if(!res.ok) throw new Error("rate fetch failed");
         const data = await res.json();
-        const r = data && data.rates && data.rates.VND;
+        const r = data && data.conversion_rate;
         if(r && isFinite(r)){
           state.rateVND = r;
           state.rateUpdatedAt = Date.now();
