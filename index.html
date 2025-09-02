@@ -112,9 +112,11 @@
     /* ベトナム国旗の装飾 */
     .flag-decoration {
       position: absolute;
-      /* カードの上に配置（ピクセル指定で固定） */
-      top: -100px;
-      width: 200px;
+      /* カードの上に配置 */
+      top: -80px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 160px;
       height: auto;
       filter: drop-shadow(0 4px 8px rgba(0,0,0,.3));
       z-index: 3;
@@ -125,7 +127,6 @@
   <div class="wrap">    
     <div class="chrome">
       <button class="btn btn-sm me-2" id="btn-settings" aria-label="設定を開く">⚙️ 設定</button>
-      <button class="btn btn-sm" id="btn-boost" aria-label="コインを増やす">🪙 じゃばじゃば</button>
     </div>
 
     <!-- カードとその上の国旗を同じdivで包んで相対位置関係を固定 -->
@@ -393,10 +394,7 @@
       // 保存直前に最新レートも反映
       await updateRateView();
       save(); modal.hide();
-      // バースト: 中央から外側へ広がる多めのコイン
-      for(let i=0;i<28;i++) setTimeout(()=>spawnCoin(true), i*30);
     };
-    $("#btn-boost").onclick=()=>{ for(let i=0;i<26;i++) setTimeout(()=>spawnCoin(true), i*28); };
 
     // 初期化
     load();
