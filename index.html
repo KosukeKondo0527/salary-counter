@@ -243,9 +243,11 @@
     function stopCoins(){ if(coinTimer) clearInterval(coinTimer); coinTimer=null; }
 
     // --- UI配線 ---
-    const modal=$("#modal"),salaryI=$("#salary"),paydayI=$("#payday"),currencyI=$("#currency"),decimalsI=$("#decimals");
-    $("#btn-settings").onclick=()=>{salaryI.value=state.salary||"";paydayI.value=state.payday||25;currencyI.value=state.currency||"JPY";decimalsI.value=state.decimals??0;$("#rateView").value="取得中…";modal.setAttribute("open","");updateRateView();};
-    $("#btn-cancel").onclick=()=>modal.removeAttribute("open");
+    const modalEl = $("#modal");
+    const modal = new bootstrap.Modal(modalEl);
+    const salaryI=$("#salary"),paydayI=$("#payday"),currencyI=$("#currency"),decimalsI=$("#decimals");
+    $("#btn-settings").onclick=()=>{salaryI.value=state.salary||"";paydayI.value=state.payday||25;currencyI.value=state.currency||"JPY";decimalsI.value=state.decimals??0;$("#rateView").value="取得中…";modal.show();updateRateView();};
+    $("#btn-cancel").onclick=()=>modal.hide();
     $("#btn-save").onclick=async ()=>{
       const s=+salaryI.value,p=Math.max(1,Math.min(31,+paydayI.value)),dec=+decimalsI.value;
       if(!s){alert("月収を正しく入力");return;}
@@ -253,7 +255,7 @@
       Object.assign(state,{salary:s,payday:p,currency:base,decimals:dec});
       // 保存直前に最新レートも反映
       await updateRateView();
-      save(); modal.removeAttribute("open");
+      save(); modal.hide();
       for(let i=0;i<18;i++) setTimeout(()=>spawnCoin(true),i*20);
     };
     $("#btn-boost").onclick=()=>{for(let i=0;i<14;i++) setTimeout(()=>spawnCoin(true),i*18);};
@@ -266,7 +268,7 @@
 
     // 初回レート取得（基準通貨がVND以外なら）
     (async ()=>{ if(state.currency!=="VND"){ await updateRateView(); save(); }})();
-    if(!state.salary) modal.setAttribute("open","");
+    if(!state.salary) modal.show();
   </script>
 </body>
 </html>
