@@ -326,26 +326,41 @@
        const vw = innerWidth, vh = innerHeight;
        const cx = Math.round(vw/2);
        const jitter = (n) => (Math.random()*2-1)*n;
-       // 開始位置は画面下端の中央付近から（中央から外側へ広がる）
-       // 中央に近いほど外側への広がりが視認しやすくなるので jitter は小さめにする
-       const startLeft = cx + Math.round(jitter(12));
-       const startTop = Math.round(vh - 12 + jitter(6)); // ほぼ下端
+
+       // --- 改修: 画面上端全体から下端中央へ向かって落ちる動き ---
+       // 開始位置は画面上端のランダムな横位置
+       const startLeft = Math.round(Math.random() * vw);
+       const startTop = Math.round(8 + Math.random() * 20); // 上端近く
        c.style.left = startLeft + "px";
        c.style.top = startTop + "px";
-       // 横方向の移動: 中心からの位置差に応じて外側方向へ偏らせる
-       const baseSpread = burst ? 100 : 220; // 適度に広がる値
-       // 外側方向に強めの移動をさせるため、開始位置が右側なら正、左側なら負の値を使う
-       const dir = (startLeft >= cx) ? 1 : -1;
-       const magnitude = (Math.random() * baseSpread) + (baseSpread * 0.25); // 最低でも baseSpread*0.25 以上
-       c.style.setProperty('--x', (dir * magnitude) + 'px');
-       // 少し小さめのコインで多く表示しても邪魔にならないようにする
-       c.style.setProperty('--s', (0.45 + Math.random()*0.7).toString());
-       // 画面上端まで上がるように画面高さ + マージン
-       c.style.setProperty('--rise', (vh + 160) + 'px');
-       // アニメーション時間をさらに長めにして上昇をゆっくりにする（3.5〜6.0s）
-       c.style.setProperty('--duration', (3.5 + Math.random()*2.5) + 's');
+
+       // 水平方向の最終到達位置を画面中央に寄せる
+       // CSS の keyframes 側では最終的に calc(var(--x) * 2.5) が適用されるため、
+       // 最終移動量 desiredFinalX を得るには --x = desiredFinalX / 2.5 を設定する
+       const desiredFinalX = cx - startLeft;
+       const xVar = desiredFinalX / 2.5;
+       c.style.setProperty('--x', xVar + 'px');
+
+       // 少し小さめにして重なっても目立たないようにする
+       c.style.setProperty('--s', (0.45 + Math.random()*0.6).toString());
+
+       // 縦移動は "下へ" 動かすようにする。
+       // 既存 keyframes の calc(-1 * var(--rise)) を利用するため、
+       // --rise に負の値を入れると最終的に正の下方向移動になる。
+       const bottomOffset = 64; // 下端に溜まりすぎないように余白を残す
+       const travel = Math.max(40, vh - bottomOffset - startTop); // 最低移動量を確保
+       c.style.setProperty('--rise', (-travel) + 'px');
+
+       // アニメーションを短めにして早めに消えるようにする
+       c.style.setProperty('--duration', (1.2 + Math.random()*1.2) + 's'); // 1.2〜2.4s
+
        coinsEl.appendChild(c);
-       c.addEventListener('animationend', () => c.remove());
+
+       // アニメーション終了で削除。念のためタイムアウトの保険もかける。
+       const remove = () => { if(c.parentNode) c.parentNode.removeChild(c); };
+       c.addEventListener('animationend', remove, { once: true });
+       // 安全策: 3s 経っても残っていたら強制削除
+       setTimeout(remove, 3000);
      }
     // 現在の稼ぎ（VND/ms）を返す
     function earnPerMsVND(){
